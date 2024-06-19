@@ -1,11 +1,15 @@
 package run.var.teamcity.cloud.docker.agent;
 
 import com.intellij.openapi.diagnostic.Logger;
+import jetbrains.buildServer.agent.AgentLifeCycleAdapter;
+import jetbrains.buildServer.agent.AgentLifeCycleListener;
+import jetbrains.buildServer.agent.BuildAgent;
 import jetbrains.buildServer.agent.BuildAgentConfiguration;
 import jetbrains.buildServer.clouds.CloudInstanceUserData;
 import jetbrains.buildServer.log.Loggers;
+import jetbrains.buildServer.util.EventDispatcher;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.PostConstruct;
 import java.util.Map;
 
 /**
@@ -17,11 +21,16 @@ public class AgentController {
 
     private final BuildAgentConfiguration agentConfiguration;
 
-    public AgentController(BuildAgentConfiguration agentConfiguration) {
+    public AgentController(BuildAgentConfiguration agentConfiguration, EventDispatcher<AgentLifeCycleListener> events) {
         this.agentConfiguration = agentConfiguration;
+        events.addListener(new AgentLifeCycleAdapter() {
+            @Override
+            public void afterAgentConfigurationLoaded(@NotNull BuildAgent agent) {
+                init();
+            }
+        });
     }
 
-    @PostConstruct
     void init() {
 
         Map<String, String> env = agentConfiguration.getBuildParameters().getEnvironmentVariables();

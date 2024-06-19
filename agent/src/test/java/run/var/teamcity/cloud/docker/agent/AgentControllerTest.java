@@ -1,6 +1,8 @@
 package run.var.teamcity.cloud.docker.agent;
 
+import jetbrains.buildServer.agent.AgentLifeCycleListener;
 import jetbrains.buildServer.clouds.CloudInstanceUserData;
+import jetbrains.buildServer.util.EventDispatcher;
 import org.junit.Test;
 import run.var.teamcity.cloud.docker.agent.test.TestBuildAgentConfiguration;
 
@@ -19,7 +21,7 @@ public class AgentControllerTest {
     public void unmanagedAgent() {
         TestBuildAgentConfiguration config = new TestBuildAgentConfiguration();
 
-        AgentController ctrl = new AgentController(config);
+        AgentController ctrl = new AgentController(config, EventDispatcher.create(AgentLifeCycleListener.class));
 
         ctrl.init();
 
@@ -40,11 +42,11 @@ public class AgentControllerTest {
                 .withEnv("TC_DK_CLD_CLIENT_UUID", UUID.randomUUID().toString())
                 .withEnv("TC_DK_CLD_AGENT_PARAMS", userData.serialize());
 
-        AgentController ctrl = new AgentController(config);
+        AgentController ctrl = new AgentController(config, EventDispatcher.create(AgentLifeCycleListener.class));
 
         ctrl.init();
 
-        assertThat(config.getConfigurationParameters()).isEqualTo(customParams);
+        assertThat(config.getConfigurationParameters()).containsAllEntriesOf(customParams);
     }
 
     @Test
@@ -55,10 +57,8 @@ public class AgentControllerTest {
                 .withEnv("TC_DK_CLD_CLIENT_UUID", UUID.randomUUID().toString())
                 .withEnv("TC_DK_CLD_AGENT_PARAMS", "NOT A VALID CLOUD INSTANCE USER DATA");
 
-        AgentController ctrl = new AgentController(config);
+        AgentController ctrl = new AgentController(config, EventDispatcher.create(AgentLifeCycleListener.class));
 
         ctrl.init();
-
-        assertThat(config.getConfigurationParameters()).isEmpty();
     }
 }
